@@ -1,112 +1,184 @@
 <template>
-  <div class="mb-4 flex flex-wrap gap-4">
-    <div v-if="loading" class="text-blue-500">加载过滤器数据...</div>
-    <div v-else-if="error" class="text-red-500">{{ error }}</div>
-    <div v-else>
-      <div>
-        <label class="block text-sm font-medium">年份</label>
-        <input
-          type="range"
-          v-model="localYear"
-          :min="years[0]"
-          :max="years[years.length - 1]"
-          @change="emitUpdate"
-          class="w-full"
-        />
-        <span>{{ localYear || '所有年份' }}</span>
-      </div>
-      <div>
-        <label class="block text-sm font-medium">国家/港口</label>
-        <select v-model="localPort" @change="emitUpdate" class="border rounded p-2">
-          <option value="">所有港口</option>
-          <option v-for="port in ports" :key="port" :value="port">{{ port }}</option>
-        </select>
-      </div>
-      <div>
-        <label class="block text-sm font-medium">程序类型</label>
-        <select v-model="localProcedure" @change="emitUpdate" class="border rounded p-2">
-          <option value="">所有程序</option>
-          <option v-for="proc in procedureTypes" :key="proc" :value="proc">{{ proc }}</option>
-        </select>
-      </div>
+  <div>
+    <label class="block text-sm font-medium mb-1">救治人数</label>
+    <canvas ref="yearChartCanvas" id="yearChart" style="width: 700px; height: 100px; cursor: pointer;"></canvas>
+    <div class="mt-1 text-sm text-gray-700">
+      当前选中年份：
+      <span v-if="localYear">{{ localYear }}</span>
+      <span v-else>所有年份</span>
+      <button v-if="localYear" @click="clearYear"
+        style="margin-left: 1rem; padding: 0.25rem 0.5rem; border: 1px solid #ccc; border-radius: 4px; font-size: 0.875rem;">
+        清除选择
+      </button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import Papa from 'papaparse';
+import { ref, watch, onMounted, defineEmits, defineProps } from 'vue';
+import { Chart, BarController, BarElement, CategoryScale, LinearScale, Tooltip } from 'chart.js';
 
-const emit = defineEmits(['update']);
-defineProps(['procedures']);
-const impactMetrics = ref([]);
-const localYear = ref('');
-const localPort = ref('');
-const localProcedure = ref('');
-const loading = ref(true);
-const error = ref(null);
+Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip);
 
-const loadMetrics = async () => {
-  console.log('FilterPanel: 开始加载 impact_metrics.csv');
+const emit = defineEmits(['update:year']);
+const props = defineProps({
+  modelValue: { type: String, default: '' }
+});
+
+const localYear = ref(props.modelValue);
+const yearChartCanvas = ref(null);
+let yearChartInstance = null;
+let yearlyTotals = {};  // 缓存数据
+
+// 解析CSV字符串为年份统计
+function parseCSVToYearlyTotals(csv) {
+  const lines = csv.trim().split('\n');
+  const headers = lines[0].split(',');
+
+  const totalIndex = headers.indexOf('Total_Procedures');
+  const yearIndex = headers.indexOf('Year');
+
+  const totals = {};
+
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split(',');
+    const year = cols[yearIndex];
+    const totalProcedures = parseInt(cols[totalIndex], 10);
+
+    if (!totals[year]) {
+      totals[year] = 0;
+    }
+    totals[year] += totalProcedures;
+  }
+
+  return totals;
+}
+
+async function loadCSV() {
   try {
-    Papa.parse('/data/impact_metrics.csv', {
-      download: true,
-      header: true,
-      complete: (result) => {
-        console.log('FilterPanel: 加载完成，记录数:', result.data.length);
-        impactMetrics.value = result.data.map((d) => ({
-          ...d,
-          Year: String(d.Year || '').trim(),
-          Country: String(d.Country || '').trim(),
-          Port_City: String(d.Port_City || '').trim(),
-        }));
-        const years = [...new Set(impactMetrics.value.map((d) => d.Year))].sort();
-        const ports = [...new Set(impactMetrics.value.map((d) => `${d.Country} - ${d.Port_City}`))].sort();
-        console.log('FilterPanel: years:', years);
-        console.log('FilterPanel: ports:', ports);
-        console.log('FilterPanel: 包含 2013 和 Cameroon - Douala:', years.includes('2013'), ports.includes('Cameroon - Douala'));
-        loading.value = false;
+    const response = await fetch('/data/procedures_by_location.csv'); // 修改为你的csv路径
+    if (!response.ok) {
+      throw new Error(`加载CSV失败: ${response.status}`);
+    }
+    const csvText = await response.text();
+    yearlyTotals = parseCSVToYearlyTotals(csvText);
+    renderYearChart();
+  } catch (error) {
+    console.error('读取CSV文件失败:', error);
+  }
+}
+
+const setYear = (year) => {
+  if (localYear.value === year) {
+    localYear.value = '';
+  } else {
+    localYear.value = year;
+  }
+  emit('update:year', localYear.value);
+};
+
+const clearYear = () => {
+  localYear.value = '';
+  emit('update:year', '');
+};
+
+const renderYearChart = () => {
+  if (!yearChartCanvas.value) return;
+
+  const years = Object.keys(yearlyTotals).sort();
+  const data = years.map(y => yearlyTotals[y]);
+
+  const backgroundColors = years.map(y =>
+    localYear.value === y
+      ? 'rgba(0, 123, 255, 1)'
+      : 'rgba(100, 149, 237, 0.3)'
+  );
+
+  const maxVal = Math.max(...data);
+
+  const dataObj = {
+    labels: years,
+    datasets: [{
+      label: '救治人数',
+      data,
+      backgroundColor: backgroundColors,
+      borderColor: 'rgba(54, 162, 235, 1)',
+      borderWidth: 1,
+    }],
+  };
+
+  const options = {
+    responsive: false,
+    maintainAspectRatio: false,
+    scales: {
+      y: {
+        beginAtZero: true,
+        max: maxVal * 1.1,
+        ticks: {
+          stepSize: Math.ceil(maxVal / 5),
+          display: false,
+        },
+        grid: {
+          display: false,
+          drawBorder: false,
+        },
       },
-      error: (err) => {
-        console.error('FilterPanel: 加载失败:', err);
-        error.value = `加载过滤器数据失败：${err.message}`;
-        loading.value = false;
+      x: {
+        ticks: {
+          font: { size: 10 },
+        },
+        grid: {
+          display: false,
+        },
       },
+    },
+    plugins: {
+      legend: { display: false },
+      tooltip: { enabled: true },
+    },
+    onClick(evt, elements) {
+      if (elements.length) {
+        const index = elements[0].index;
+        const clickedYear = years[index];
+        setYear(clickedYear);
+      }
+    },
+  };
+
+  if (yearChartInstance) {
+    yearChartInstance.data.labels = years;
+    yearChartInstance.data.datasets[0].data = data;
+    yearChartInstance.data.datasets[0].backgroundColor = backgroundColors;
+    yearChartInstance.options.scales.y.max = options.scales.y.max;
+    yearChartInstance.update({ duration: 0 });
+  } else {
+    yearChartInstance = new Chart(yearChartCanvas.value, {
+      type: 'bar',
+      data: dataObj,
+      options,
     });
-  } catch (err) {
-    console.error('FilterPanel: 异常:', err);
-    error.value = `加载过滤器数据异常：${err.message}`;
-    loading.value = false;
   }
 };
 
-const years = computed(() => {
-  if (!impactMetrics.value.length) return [];
-  return [...new Set(impactMetrics.value.map((d) => String(d.Year).trim()))].sort();
+watch(localYear, () => {
+  renderYearChart();
 });
 
-const ports = computed(() => {
-  if (!impactMetrics.value.length) return [];
-  return [...new Set(impactMetrics.value.map((d) => `${String(d.Country).trim()} - ${String(d.Port_City).trim()}`))].sort();
+watch(() => props.modelValue, (newVal) => {
+  if (newVal !== localYear.value) {
+    localYear.value = newVal;
+  }
 });
-
-const procedureTypes = computed(() => [
-  'Maxillofacial',
-  'General_Surgery',
-  'Orthopedic',
-  'Reconstructive_Plastic',
-  'Womens_Health',
-  'Ophthalmic',
-  'Dental',
-]);
-
-const emitUpdate = () => {
-  console.log('FilterPanel: 触发更新，year:', localYear.value, 'port:', localPort.value, 'procedure:', localProcedure.value);
-  emit('update', { year: localYear.value, port: localPort.value, procedure: localProcedure.value });
-};
 
 onMounted(() => {
-  console.log('FilterPanel: 组件挂载');
-  loadMetrics();
+  loadCSV();
 });
 </script>
+
+<style>
+#yearChart {
+  width: 1280px !important;
+  height: 100px !important;
+  display: block;
+}
+</style>

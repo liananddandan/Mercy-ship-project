@@ -11,7 +11,7 @@
     <div v-else-if="loading" class="loading-message">正在加载数据...</div>
     <div v-else>
       <ErrorBoundary @error="handleComponentError">
-        <FilterPanel @update="updateData" :procedures="procedures" />
+        <FilterPanel v-model:year="selectedYear" :procedures="procedures" />
       </ErrorBoundary>
       <ErrorBoundary @error="handleComponentError">
         <MapView :metrics="filteredMetrics" />
