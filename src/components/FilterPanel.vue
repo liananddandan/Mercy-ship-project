@@ -1,14 +1,14 @@
 <template>
   <div>
-    <label class="block text-sm font-medium mb-1">救治人数</label>
+    <label class="block text-sm font-medium mb-1">Number of Treatments</label>
     <canvas ref="yearChartCanvas" id="yearChart" style="width: 700px; height: 100px; cursor: pointer;"></canvas>
     <div class="mt-1 text-sm text-gray-700">
-      当前选中年份：
+      Selected Year:
       <span v-if="localYear">{{ localYear }}</span>
-      <span v-else>所有年份</span>
+      <span v-else>All Years</span>
       <button v-if="localYear" @click="clearYear"
         style="margin-left: 1rem; padding: 0.25rem 0.5rem; border: 1px solid #ccc; border-radius: 4px; font-size: 0.875rem;">
-        清除选择
+        Clear Selection
       </button>
     </div>
   </div>
@@ -28,9 +28,9 @@ const props = defineProps({
 const localYear = ref(props.modelValue);
 const yearChartCanvas = ref(null);
 let yearChartInstance = null;
-let yearlyTotals = {};  // 缓存数据
+let yearlyTotals = {};  // cache data
 
-// 解析CSV字符串为年份统计
+// Parse CSV string into yearly totals
 function parseCSVToYearlyTotals(csv) {
   const lines = csv.trim().split('\n');
   const headers = lines[0].split(',');
@@ -56,15 +56,15 @@ function parseCSVToYearlyTotals(csv) {
 
 async function loadCSV() {
   try {
-    const response = await fetch('/data/procedures_by_location.csv'); // 修改为你的csv路径
+    const response = await fetch('/data/procedures_by_location.csv'); // Modify to your CSV path
     if (!response.ok) {
-      throw new Error(`加载CSV失败: ${response.status}`);
+      throw new Error(`Failed to load CSV: ${response.status}`);
     }
     const csvText = await response.text();
     yearlyTotals = parseCSVToYearlyTotals(csvText);
     renderYearChart();
   } catch (error) {
-    console.error('读取CSV文件失败:', error);
+    console.error('Failed to read CSV file:', error);
   }
 }
 
@@ -99,7 +99,7 @@ const renderYearChart = () => {
   const dataObj = {
     labels: years,
     datasets: [{
-      label: '救治人数',
+      label: 'Number of Treatments',
       data,
       backgroundColor: backgroundColors,
       borderColor: 'rgba(54, 162, 235, 1)',

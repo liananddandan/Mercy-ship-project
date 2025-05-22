@@ -8,7 +8,7 @@
     </section>
 
     <div v-if="error" class="error-message">{{ error }}</div>
-    <div v-else-if="loading" class="loading-message">正在加载数据...</div>
+    <div v-else-if="loading" class="loading-message">Loading data...</div>
     <div v-else>
       <ErrorBoundary @error="handleComponentError">
         <FilterPanel v-model:year="selectedYear" :procedures="procedures" />
@@ -49,8 +49,8 @@ const error = ref(null);
 const loading = ref(true);
 
 const handleComponentError = (err) => {
-  console.error('App: 组件错误:', err);
-  error.value = `组件错误：${err.message}`;
+  console.error('App: Component error:', err);
+  error.value = `Component error: ${err.message}`;
 };
 
 const loadData = async () => {
@@ -82,8 +82,8 @@ const loadData = async () => {
       Country: String(d.Country || '').trim(),
     }));
   } catch (err) {
-    error.value = `数据加载失败：${err.message}`;
-    console.error('App: 加载错误:', err);
+    error.value = `Failed to load data: ${err.message}`;
+    console.error('App: Loading error:', err);
   } finally {
     loading.value = false;
   }
@@ -210,12 +210,11 @@ loadData();
   margin-bottom: 1rem;
 }
 
-
 /* banner */
-/* Banner 区域背景与高度 */
+/* Banner area background and height */
 .banner {
-  background-color: #003EAB; /* Tailwind 的 blue-600 */
-  height: 4.5rem;             /* 更紧凑的高度 */
+  background-color: #003EAB; /* Tailwind's blue-600 */
+  height: 4.5rem;             /* More compact height */
   border-radius: 0.75rem;     /* rounded-xl */
   display: flex;
   align-items: center;
@@ -224,27 +223,26 @@ loadData();
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* 内容布局 */
+/* Content layout */
 .banner-content {
   display: flex;
   align-items: center;
-  gap: 2rem;         /* 缩小图标与文字的间距 */
+  gap: 2rem;         /* Reduced spacing between icon and text */
   z-index: 1;
   text-align: center;
 }
 
-/* 图标样式 */
+/* Icon style */
 .banner-icon {
   width: 4rem;
   height: 4rem;
 }
 
-/* 标题文字样式 */
+/* Title text style */
 .banner-title {
-  font-size: 1.25rem;  /* text-xl 大小 */
+  font-size: 1.25rem;  /* text-xl size */
   font-weight: 600;
   color: white;
   line-height: 1.2;
 }
-
 </style>

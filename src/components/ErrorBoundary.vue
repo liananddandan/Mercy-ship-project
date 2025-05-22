@@ -2,7 +2,7 @@
   <div>
     <slot v-if="!hasError"></slot>
     <div v-else class="text-red-500 p-4 border border-red-500 rounded">
-      <p>组件渲染失败：{{ errorMessage }}</p>
+      <p>compontent rendering failed: {{ errorMessage }}</p>
     </div>
   </div>
 </template>

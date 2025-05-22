@@ -39,7 +39,7 @@ const mapError = ref(null);
 
 const initMap = async () => {
   try {
-    console.log('MapView: 初始化地图');
+    console.log('MapView: Initializing map');
     await nextTick();
     const mapContainer = document.getElementById('map');
     if (!mapContainer) {
@@ -48,39 +48,39 @@ const initMap = async () => {
     map.value = L.map('map', {
       maxBounds: [[-35, -20], [37, 55]],
       maxBoundsViscosity: 1.0,
-      minZoom: 4,
+      minZoom: 1,
       maxZoom: 10,
-    }).setView([5, 10], 3);
+    }).setView([5, 10], 4);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       noWrap: true,
     }).addTo(map.value);
-    console.log('MapView: 地图初始化成功');
+    console.log('MapView: Map initialized successfully');
     map.value.invalidateSize();
   } catch (err) {
-    console.error('MapView: 地图初始化失败:', err);
+    console.error('MapView: Map initialization failed:', err);
     mapError.value = err.message;
   }
 };
 
 const updateMarkers = (metrics) => {
   if (!map.value) {
-    console.warn('MapView: 地图未初始化，跳过更新标记');
+    console.warn('MapView: Map not initialized, skipping marker update');
     return;
   }
   map.value.eachLayer((layer) => {
     if (layer instanceof L.Marker) map.value.removeLayer(layer);
   });
 
-  console.log('MapView: 更新标记，metrics:', metrics);
+  console.log('MapView: Updating markers, metrics:', metrics);
   if (!metrics || !Array.isArray(metrics)) {
-    console.warn('MapView: metrics 无效:', metrics);
+    console.warn('MapView: Invalid metrics:', metrics);
     return;
   }
 
   metrics.forEach((d) => {
     if (!d || !d.Port_City || !d.Country) {
-      console.warn('MapView: 无效数据项:', d);
+      console.warn('MapView: Invalid data item:', d);
       return;
     }
     const coords = portCoordinates[d.Port_City];
@@ -90,16 +90,16 @@ const updateMarkers = (metrics) => {
         .bindPopup(`
           <div class="popup-content max-w-[300px]">
             <h3>${d.Country} - ${d.Port_City} (${d.Year})</h3>
-            <p><b>总手术量:</b> ${d.Total_Procedures || 'N/A'}</p>
-            <p><b>成功率:</b> ${d.Successful_Outcomes_Percent || 'N/A'}%</p>
-            <p><b>经济影响:</b> $${Number(d.Economic_Impact_USD || 0).toLocaleString()}</p>
-            <p><b>培训专业人员:</b> ${d.Local_Professionals_Trained || 'N/A'}</p>
-            <p><b>生活质量提升:</b> ${d.Patient_QOL_Improvement_Percent || 'N/A'}%</p>
+            <p><b>Total Procedures:</b> ${d.Total_Procedures || 'N/A'}</p>
+            <p><b>Success Rate:</b> ${d.Successful_Outcomes_Percent || 'N/A'}%</p>
+            <p><b>Economic Impact:</b> $${Number(d.Economic_Impact_USD || 0).toLocaleString()}</p>
+            <p><b>Local Professionals Trained:</b> ${d.Local_Professionals_Trained || 'N/A'}</p>
+            <p><b>Patient QOL Improvement:</b> ${d.Patient_QOL_Improvement_Percent || 'N/A'}%</p>
           </div>
         `);
-      console.log('MapView: 添加标记:', d.Port_City, coords);
+      console.log('MapView: Added marker:', d.Port_City, coords);
     } else {
-      console.warn('MapView: 未找到坐标:', d.Port_City);
+      console.warn('MapView: Coordinates not found for:', d.Port_City);
     }
   });
 };

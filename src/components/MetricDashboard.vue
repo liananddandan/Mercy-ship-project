@@ -35,7 +35,7 @@ const props = defineProps({
 
 const aggregateMetrics = computed(() => {
   if (!props.metrics || !Array.isArray(props.metrics)) {
-    console.warn('MetricDashboard: metrics 无效，返回默认值');
+    console.warn('MetricDashboard: Invalid metrics, returning default values');
     return {
       totalProcedures: 0,
       successRate: 0,

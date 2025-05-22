@@ -20,7 +20,7 @@ import {
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 
-// ✅ 正确绑定 props
+// Correctly bind props
 const props = defineProps(['procedures']);
 
 const chartData = computed(() => ({
@@ -29,7 +29,7 @@ const chartData = computed(() => ({
     'General Surgery',
     'Orthopedic',
     'Reconstructive Plastic',
-    'Womens Health',
+    "Women's Health",
     'Ophthalmic',
     'Dental',
   ],
