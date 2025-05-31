@@ -1,24 +1,24 @@
 <template>
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-    <div class="border p-4 rounded">
-      <h2 class="text-xl font-semibold">Total Procedures</h2>
-      <p class="text-2xl">{{ aggregateMetrics.totalProcedures }}</p>
+  <div class="grid">
+    <div>
+      <h2>Total Procedures</h2>
+      <p>{{ aggregateMetrics.totalProcedures }}</p>
     </div>
-    <div class="border p-4 rounded">
-      <h2 class="text-xl font-semibold">Success Rate (%)</h2>
-      <p class="text-2xl">{{ aggregateMetrics.successRate.toFixed(1) }}</p>
+    <div>
+      <h2>Success Rate (%)</h2>
+      <p>{{ aggregateMetrics.successRate.toFixed(1) }}</p>
     </div>
-    <div class="border p-4 rounded">
-      <h2 class="text-xl font-semibold">Economic Impact (USD)</h2>
-      <p class="text-2xl">{{ formatUSD(aggregateMetrics.economicImpact) }}</p>
+    <div>
+      <h2>Economic Impact (USD)</h2>
+      <p>{{ formatUSD(aggregateMetrics.economicImpact) }}</p>
     </div>
-    <div class="border p-4 rounded">
-      <h2 class="text-xl font-semibold">Professionals Trained</h2>
-      <p class="text-2xl">{{ aggregateMetrics.professionalsTrained }}</p>
+    <div>
+      <h2>Professionals Trained</h2>
+      <p>{{ aggregateMetrics.professionalsTrained }}</p>
     </div>
-    <div class="border p-4 rounded">
-      <h2 class="text-xl font-semibold">QOL Improvement (%)</h2>
-      <p class="text-2xl">{{ aggregateMetrics.qolImprovement.toFixed(1) }}</p>
+    <div>
+      <h2>QOL Improvement (%)</h2>
+      <p>{{ aggregateMetrics.qolImprovement.toFixed(1) }}</p>
     </div>
   </div>
 </template>
@@ -65,3 +65,58 @@ const aggregateMetrics = computed(() => {
 
 const formatUSD = (value) => `$${Number(value).toLocaleString()}`;
 </script>
+
+<style scoped>
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px; /* 卡片间距 */
+  justify-content: flex-start;
+}
+
+.grid > div {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  flex: 0 0 140px; /* 固定宽度 */
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  cursor: default;
+  transition: box-shadow 0.2s ease;
+}
+
+.grid > div:hover {
+  box-shadow: 0 6px 12px rgba(0,0,0,0.12);
+}
+
+.grid > div h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #1e3a8a;
+}
+
+.grid > div p {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2563eb;
+  line-height: 1;
+  margin: 0;
+  user-select: text;
+}
+
+/* 响应式，移动端竖排 */
+@media (max-width: 600px) {
+  .grid {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .grid > div {
+    flex-basis: 100%;
+    max-width: 100%;
+  }
+}
+</style>
+

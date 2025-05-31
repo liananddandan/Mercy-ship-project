@@ -1,30 +1,77 @@
 <template>
   <div class="container">
+    <!-- Top Banner -->
     <section class="banner">
-      <div class="banner-content">
-        <img class="banner-icon" src="/images/logo.svg" alt="Logo" />
-        <h1 class="banner-title">Mercy Ships Africa Charity Visualization</h1>
-      </div>
+      <img class="banner-icon" src="/images/logo.svg" alt="Logo" />
+      <h1 class="banner-title">
+        Mercy Ships Africa Charity Visualization
+        <span class="banner-subtitle">Make a difference in Africa together</span>
+      </h1>
     </section>
 
-    <div v-if="error" class="error-message">{{ error }}</div>
-    <div v-else-if="loading" class="loading-message">Loading data...</div>
-    <div v-else>
-      <ErrorBoundary @error="handleComponentError">
-        <FilterPanel v-model:year="selectedYear" :procedures="procedures" />
-      </ErrorBoundary>
-      <ErrorBoundary @error="handleComponentError">
-        <MapView :metrics="filteredMetrics" />
-      </ErrorBoundary>
-      <ErrorBoundary @error="handleComponentError">
-        <MetricDashboard :metrics="filteredMetrics" />
-      </ErrorBoundary>
-      <ErrorBoundary @error="handleComponentError">
-        <ProcedureChart :procedures="filteredProcedures" />
-      </ErrorBoundary>
-      <ErrorBoundary @error="handleComponentError">
-        <DemographicChart :demographics="filteredDemographics" />
-      </ErrorBoundary>
+    <div class="main-layout">
+      <!-- Left Menu -->
+      <aside class="sidebar left-menu">
+        <h3>Menu</h3>
+        <ul>
+          <li>
+            <button :class="{ active: currentView === 'map' }" @click="currentView = 'map'">Map</button>
+          </li>
+          <li>
+            <button :class="{ active: currentView === 'medical' }" @click="currentView = 'medical'">Medical
+              Statistics</button>
+          </li>
+          <li>
+            <button :class="{ active: currentView === 'demographics' }"
+              @click="currentView = 'demographics'">Demographics</button>
+          </li>
+          <li>
+            <button :class="{ active: currentView === 'other' }" @click="currentView = 'other'">Stories</button>
+          </li>
+          <li>
+            <!-- 这里用a标签替代button，添加target="_blank"新窗口打开 -->
+            <a href="https://mercyships.org.nz/get-involved/become-a-volunteer/" target="_blank"
+              rel="noopener noreferrer" class="external-link">
+              Volunteer
+            </a>
+          </li>
+        </ul>
+        <div class="copyright">© 2024 Mercy Ships Demo</div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <ErrorBoundary @error="handleComponentError">
+          <template v-if="currentView === 'map'">
+            <div class="map-container">
+              <MapView :metrics="filteredMetrics" :selectedYear="selectedYear" />
+            </div>
+            <div class="filter-panel">
+              <FilterPanel v-model:year="selectedYear" :procedures="procedures" />
+            </div>
+          </template>
+
+          <template v-else-if="currentView === 'medical'">
+            <ProcedureTrendChart :procedures="procedures" />
+            <!-- More medical stats components can be added here -->
+          </template>
+
+          <template v-else-if="currentView === 'demographics'">
+            <DemographicChart :demographics="filteredDemographics" />
+          </template>
+
+          <template v-else>
+            <AnnualStories />
+          </template>
+        </ErrorBoundary>
+      </main>
+
+      <!-- Right Sidebar (only show for Map view) -->
+      <aside v-if="currentView === 'map'" class="sidebar right-bar">
+        <ErrorBoundary @error="handleComponentError">
+          <MetricDashboard :metrics="filteredMetrics" />
+        </ErrorBoundary>
+      </aside>
     </div>
   </div>
 </template>
@@ -35,21 +82,26 @@ import Papa from 'papaparse';
 import FilterPanel from '@/components/FilterPanel.vue';
 import MapView from '@/components/MapView.vue';
 import MetricDashboard from '@/components/MetricDashboard.vue';
-import ProcedureChart from '@/components/ProcedureChart.vue';
 import DemographicChart from '@/components/DemographicChart.vue';
+import ProcedureTrendChart from '@/components/ProcedureTrendChart.vue';
 import ErrorBoundary from '@/components/ErrorBoundary.vue';
+import AnnualStories from '@/components/AnnualStories.vue';
+
 
 const impactMetrics = ref([]);
 const patientDemographics = ref([]);
 const procedures = ref([]);
-const selectedYear = ref('');
+
+const selectedYear = ref(null);
 const selectedPort = ref('');
 const selectedProcedure = ref('');
+
+const currentView = ref('map'); // Default to map view
+
 const error = ref(null);
 const loading = ref(true);
 
 const handleComponentError = (err) => {
-  console.error('App: Component error:', err);
   error.value = `Component error: ${err.message}`;
 };
 
@@ -63,34 +115,32 @@ const loadData = async () => {
         error: reject,
       });
     });
-
   try {
-    impactMetrics.value = (await loadCSV('/data/impact_metrics.csv')).map((d) => ({
+    impactMetrics.value = (await loadCSV('/data/impact_metrics.csv')).map(d => ({
       ...d,
       Year: String(d.Year || '').trim(),
       Country: String(d.Country || '').trim(),
       Port_City: String(d.Port_City || '').trim(),
     }));
-    patientDemographics.value = (await loadCSV('/data/patient_demographics.csv')).map((d) => ({
+    patientDemographics.value = (await loadCSV('/data/patient_demographics.csv')).map(d => ({
       ...d,
       Year: String(d.Year || '').trim(),
       Country: String(d.Country || '').trim(),
     }));
-    procedures.value = (await loadCSV('/data/procedures_by_location.csv')).map((d) => ({
+    procedures.value = (await loadCSV('/data/procedures_by_location.csv')).map(d => ({
       ...d,
       Year: String(d.Year || '').trim(),
       Country: String(d.Country || '').trim(),
     }));
   } catch (err) {
     error.value = `Failed to load data: ${err.message}`;
-    console.error('App: Loading error:', err);
   } finally {
     loading.value = false;
   }
 };
 
 const filteredMetrics = computed(() => {
-  return impactMetrics.value.filter((d) => {
+  return impactMetrics.value.filter(d => {
     const year = String(d.Year).trim();
     const port = `${String(d.Country).trim()} - ${String(d.Port_City).trim()}`;
     const matchesYear = !selectedYear.value || year === String(selectedYear.value).trim();
@@ -99,150 +149,245 @@ const filteredMetrics = computed(() => {
   });
 });
 
-const filteredDemographics = computed(() => {
-  return patientDemographics.value.filter((d) => {
-    const year = String(d.Year).trim();
-    const country = String(d.Country).trim();
-    const matchesYear = !selectedYear.value || year === String(selectedYear.value).trim();
-    const matchesPort = !selectedPort.value || country === (selectedPort.value.split(' - ')[0] || '');
-    return matchesYear && matchesPort;
-  });
-});
-
-const filteredProcedures = computed(() => {
-  return procedures.value.filter((d) => {
-    const year = String(d.Year).trim();
-    const country = String(d.Country).trim();
-    const matchesYear = !selectedYear.value || year === String(selectedYear.value).trim();
-    const matchesPort = !selectedPort.value || country === (selectedPort.value.split(' - ')[0] || '');
-    const matchesProcedure = !selectedProcedure.value || Object.keys(d).some(key => key === selectedProcedure.value && Number(d[key]) > 0);
-    return matchesYear && matchesPort && matchesProcedure;
-  });
-});
-
-const updateData = ({ year, port, procedure }) => {
-  selectedYear.value = year;
-  selectedPort.value = port;
-  selectedProcedure.value = procedure;
-};
+const filteredDemographics = computed(() => patientDemographics.value);
 
 loadData();
 </script>
 
-<style scoped>
+
+
+<style>
 .container {
-  margin: 0 auto;
-  padding: 1.5rem 2rem;
-  font-family: 'Inter', sans-serif;
-  background: linear-gradient(135deg, #e8f0fe 0%, #f9fbff 100%);
-  border-radius: 1rem;
-  box-shadow: 0 8px 20px rgba(0, 62, 171, 0.1);
-  color: #1e3a8a;
   min-height: 100vh;
-  max-width: 1280px;
+  background: linear-gradient(135deg, #e8f0fe 0%, #f9fbff 100%);
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
 }
 
-.header-card {
-  position: relative;
-  width: 100%;
-  height: 10rem;
-  /* 40 * 0.25rem */
-  border-radius: 1rem;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  border: 1px solid #d1d5db;
-  /* gray-300 */
-  background-color: #2563eb;
-  /* blue-600 */
-}
-
-.header-card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-color: #2563eb;
-  opacity: 0.9;
-  border-radius: 1rem;
-  z-index: 0;
-}
-
-.header-content {
-  position: relative;
-  z-index: 1;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 1.5rem;
-  /* text-2xl */
-  font-weight: 700;
-  /* font-bold */
-  padding: 0 1.5rem;
-  /* px-6 */
-}
-
-.header-icon {
-  height: 0.25rem;
-  /* h-1 */
-  width: 0.25rem;
-  /* w-1 */
-  margin-right: 0.25rem;
-  /* mr-1 */
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.error-message {
-  color: #ef4444;
-  /* red-500 */
-  margin-bottom: 1rem;
-}
-
-.loading-message {
-  color: #3b82f6;
-  /* blue-500 */
-  margin-bottom: 1rem;
-}
-
-/* banner */
-/* Banner area background and height */
 .banner {
-  background-color: #003EAB; /* Tailwind's blue-600 */
-  height: 4.5rem;             /* More compact height */
-  border-radius: 0.75rem;     /* rounded-xl */
+  background: #003eab;
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 0 2rem;
+  height: 5.5rem;
+  border-radius: 0.75rem;
+  margin: 1.5rem 2rem 0 2rem;
 }
 
-/* Content layout */
-.banner-content {
+.banner-icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  margin-right: 1rem;
+}
+
+.banner-title {
+  font-size: 1.8rem;
+  /* 加大标题字体 */
+  font-weight: 700;
+  line-height: 1;
   display: flex;
   align-items: center;
-  gap: 2rem;         /* Reduced spacing between icon and text */
-  z-index: 1;
+  gap: 1rem;
+  /* 标题和副标题间距 */
+}
+
+.main-layout {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  gap: 1.5rem;
+  margin: 1.5rem 2rem 2rem 2rem;
+  min-height: 0;
+}
+
+.sidebar {
+  width: 210px;
+  min-width: 180px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem 1rem 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  height: calc(100vh - 9rem);
+}
+
+.sidebar.left-menu {
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgb(0 0 0 / 0.1);
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  width: 220px;
+  font-family: 'Inter', sans-serif;
+}
+
+.sidebar.left-menu h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1e3a8a;
+  margin-bottom: 1.5rem;
   text-align: center;
+  user-select: none;
 }
 
-/* Icon style */
-.banner-icon {
-  width: 4rem;
-  height: 4rem;
+.sidebar.left-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Title text style */
-.banner-title {
-  font-size: 1.25rem;  /* text-xl size */
+.sidebar.left-menu li button {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1.25rem;
+  font-size: 1rem;
   font-weight: 600;
-  color: white;
-  line-height: 1.2;
+  color: #1e3a8a;
+  background-color: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  user-select: none;
+  text-align: left;
 }
+
+.sidebar.left-menu li button:hover {
+  background-color: #e0e7ff;
+  /* 淡蓝背景 */
+  color: #2563eb;
+  /* 亮蓝字 */
+}
+
+.sidebar.left-menu li button.active {
+  background-color: #2563eb;
+  /* 主蓝 */
+  color: white;
+  box-shadow: 0 0 10px #2563ebaa;
+}
+
+.sidebar.left-menu li button:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.sidebar.left-menu .copyright {
+  font-size: 0.8rem;
+  color: #666;
+  text-align: center;
+  margin-top: auto;
+  user-select: none;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.right-bar {
+  margin-left: 0.5rem;
+  gap: 2rem;
+}
+
+.sidebar h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.8rem;
+}
+
+.sidebar ul {
+  margin-bottom: 2rem;
+}
+
+.sidebar li {
+  margin-bottom: 0.4rem;
+}
+
+.sidebar button {
+  background: none;
+  border: none;
+  color: #1a237e;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.sidebar button:hover {
+  color: #2563eb;
+}
+
+.sidebar button.active {
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.copyright {
+  font-size: 0.85rem;
+  color: #999;
+  margin-top: auto;
+}
+
+.main-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  height: calc(100vh - 9rem);
+  overflow-y: auto;
+}
+
+.map-container {
+  background: #fff;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  min-height: 400px;
+  max-height: 500px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  height: 320px;
+}
+
+.filter-panel {
+  margin-bottom: 1rem;
+}
+
+.banner-subtitle {
+  background-color: #f59e0b;
+  /* Tailwind yellow-500 */
+  color: #1f2937;
+  /* 深灰色 */
+  padding: 0.3rem 0.8rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  /* 副标题字体稍大 */
+  line-height: 1;
+  box-shadow: 0 2px 6px rgb(245 158 11 / 0.5);
+  user-select: none;
+}
+
+.external-link {
+  display: block;
+  padding: 0.75rem 1.25rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e3a8a;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  user-select: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.external-link:hover {
+  background-color: #e0e7ff;
+  color: #2563eb;
+}
+
 </style>

@@ -1,6 +1,6 @@
 <template>
   <div class="map-container">
-    <div id="map" class="h-[500px] mb-4 border border-gray-300"></div>
+    <div id="map" class="map" />
     <div class="map-controls">
       <div class="layer-control">
         <label class="control-label">Layer:</label>
@@ -10,24 +10,17 @@
           <option value="density">Treatment Density</option>
         </select>
       </div>
-      <div class="temporal-control" v-if="selectedLayer !== 'heatmap'">
-        <label class="control-label">Time Period:</label>
-        <select v-model="selectedTimePeriod" @change="updateTemporalView">
-          <option value="all">All Time</option>
-          <option value="current">Current Year</option>
-          <option value="last5">Last 5 Years</option>
-        </select>
-      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, onMounted, nextTick, computed } from 'vue';
+import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.heat';
 
+// 修正默认图标路径，确保正常显示默认marker图标
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -40,16 +33,24 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  selectedYear: {
+    type: Number,
+    required: true,
+    default: null,
+  }
 });
 
 const selectedLayer = ref('markers');
-const selectedTimePeriod = ref('all');
+// 时间段相关的变量移除
+// const selectedTimePeriod = ref('all');
+
 const map = ref(null);
 const mapError = ref(null);
 const currentMarkers = ref([]);
 const heatmapLayer = ref(null);
 const densityLayer = ref(null);
 
+// 港口名称对应经纬度（示例数据，根据实际数据调整）
 const portCoordinates = {
   Dakar: [14.6928, -17.4467],
   Conakry: [9.6412, -13.5783],
@@ -63,76 +64,58 @@ const portCoordinates = {
   Banjul: [13.4549, -16.5790],
 };
 
-const getFilteredMetrics = computed(() => {
-  if (!props.metrics) return [];
-  
-  const currentYear = new Date().getFullYear();
-  return props.metrics.filter(metric => {
-    const year = parseInt(metric.Year);
-    switch (selectedTimePeriod.value) {
-      case 'current':
-        return year === currentYear;
-      case 'last5':
-        return year >= currentYear - 5;
-      default:
-        return true;
-    }
-  });
-});
-
-const initMap = async () => {
-  try {
-    console.log('MapView: Initializing map');
-    await nextTick();
-    const mapContainer = document.getElementById('map');
-    if (!mapContainer) {
-      throw new Error('Map container #map not found');
-    }
-    map.value = L.map('map', {
-      maxBounds: [[-35, -20], [37, 55]],
-      maxBoundsViscosity: 1.0,
-      minZoom: 1,
-      maxZoom: 10,
-    }).setView([5, 10], 4);
-    
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      noWrap: true,
-    }).addTo(map.value);
-    
-    console.log('MapView: Map initialized successfully');
-    map.value.invalidateSize();
-  } catch (err) {
-    console.error('MapView: Map initialization failed:', err);
-    mapError.value = err.message;
-  }
-};
-
 const createPopupContent = (data) => {
   return `
-    <div class="popup-content max-w-[300px]">
+    <div class="popup-content" style="max-width: 300px;">
       <h3>${data.Country} - ${data.Port_City} (${data.Year})</h3>
       <p><b>Total Procedures:</b> ${data.Total_Procedures || 'N/A'}</p>
       <p><b>Success Rate:</b> ${data.Successful_Outcomes_Percent || 'N/A'}%</p>
       <p><b>Economic Impact:</b> $${Number(data.Economic_Impact_USD || 0).toLocaleString()}</p>
-      <p><b>Local Professionals Trained:</b> ${data.Local_Professionals_Trained || 'N/A'}</p>
+      <p><b>Professionals Trained:</b> ${data.Local_Professionals_Trained || 'N/A'}</p>
       <p><b>Patient QOL Improvement:</b> ${data.Patient_QOL_Improvement_Percent || 'N/A'}%</p>
     </div>
   `;
 };
 
+const getFilteredMetrics = computed(() => {
+  if (!props.metrics) return [];
+
+  // 去掉时间段过滤，只基于props.metrics直接使用
+  return props.metrics;
+});
+
+const initMap = async () => {
+  await nextTick();
+  const mapContainer = document.getElementById('map');
+  if (!mapContainer) throw new Error('Map container #map not found');
+
+  map.value = L.map('map', {
+    maxBounds: [[-35, -20], [37, 55]],
+    maxBoundsViscosity: 1.0,
+    minZoom: 1,
+    maxZoom: 10,
+  }).setView([5, 10], 4);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    noWrap: true,
+  }).addTo(map.value);
+
+  map.value.invalidateSize();
+};
+
 const updateMarkers = () => {
   if (!map.value) return;
-  
-  // Clear existing layers
+
+  // 清除旧的 markers 和图层
   currentMarkers.value.forEach(marker => map.value.removeLayer(marker));
   currentMarkers.value = [];
-  
+
   if (heatmapLayer.value) {
     map.value.removeLayer(heatmapLayer.value);
     heatmapLayer.value = null;
   }
-  
+
   if (densityLayer.value) {
     map.value.removeLayer(densityLayer.value);
     densityLayer.value = null;
@@ -162,13 +145,21 @@ const updateMarkers = () => {
         const coords = portCoordinates[data.Port_City];
         return coords ? [...coords, data.Total_Procedures || 1] : null;
       }).filter(Boolean);
-      
+
       if (heatData.length > 0) {
         heatmapLayer.value = L.heatLayer(heatData, {
           radius: 25,
           blur: 15,
           maxZoom: 10,
         }).addTo(map.value);
+
+        // 调整地图视野，包含所有热力图点
+        const latlngs = heatData.map(([lat, lng]) => L.latLng(lat, lng));
+        const bounds = L.latLngBounds(latlngs);
+        map.value.fitBounds(bounds.pad(0.1), {
+          maxZoom: 4,
+          padding: [50, 50],
+        });
       }
       break;
 
@@ -176,51 +167,68 @@ const updateMarkers = () => {
       filteredMetrics.forEach(data => {
         const coords = portCoordinates[data.Port_City];
         if (coords) {
-          const radius = Math.sqrt(data.Total_Procedures || 1) * 2;
+          const radius = Math.sqrt(data.Total_Procedures || 1) * 2000;
           const circle = L.circle(coords, {
-            radius: radius * 1000,
+            radius: radius,
             color: '#2563eb',
             fillColor: '#3b82f6',
             fillOpacity: 0.3,
             weight: 1,
           }).addTo(map.value);
-          
+
           circle.bindPopup(createPopupContent(data));
           currentMarkers.value.push(circle);
         }
       });
       break;
   }
+
+  // 如果是markers或circle图层，则用已有markers调整视野
+  if (selectedLayer.value !== 'heatmap' && currentMarkers.value.length > 0) {
+    const group = L.featureGroup(currentMarkers.value);
+    map.value.fitBounds(group.getBounds().pad(0.1), {
+      maxZoom: 4,
+      padding: [50, 50],
+    });
+  }
 };
+
 
 const updateLayer = () => {
   updateMarkers();
 };
 
-const updateTemporalView = () => {
-  updateMarkers();
-};
-
 onMounted(async () => {
-  await initMap();
-  updateMarkers();
+  try {
+    await initMap();
+    updateMarkers();
+  } catch (err) {
+    console.error('MapView: Map initialization failed:', err);
+    mapError.value = err.message;
+  }
 });
 
 watch(() => props.metrics, updateMarkers, { deep: true });
-watch([selectedLayer, selectedTimePeriod], updateMarkers);
+watch(selectedLayer, updateMarkers);
+
 </script>
 
 <style scoped>
 .map-container {
   position: relative;
   width: 100%;
+  min-height: 500px;
+  background: #e0e0e0;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 #map {
   width: 100%;
+  height: 100%;
   min-height: 500px !important;
   position: relative;
-  background: #e0e0e0;
 }
 
 .map-controls {
@@ -231,7 +239,7 @@ watch([selectedLayer, selectedTimePeriod], updateMarkers);
   background: white;
   padding: 10px;
   border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: flex;
   gap: 10px;
 }
@@ -266,4 +274,4 @@ select {
 .popup-content p {
   margin: 4px 0;
 }
-</style> 
+</style>

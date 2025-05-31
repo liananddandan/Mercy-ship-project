@@ -1,184 +1,154 @@
 <template>
-  <div>
-    <label class="block text-sm font-medium mb-1">Number of Treatments</label>
-    <canvas ref="yearChartCanvas" id="yearChart" style="width: 700px; height: 100px; cursor: pointer;"></canvas>
-    <div class="mt-1 text-sm text-gray-700">
+  <div class="filter-panel">
+    <div class="selected-year-text">
       Selected Year:
-      <span v-if="localYear">{{ localYear }}</span>
-      <span v-else>All Years</span>
-      <button v-if="localYear" @click="clearYear"
-        style="margin-left: 1rem; padding: 0.25rem 0.5rem; border: 1px solid #ccc; border-radius: 4px; font-size: 0.875rem;">
-        Clear Selection
-      </button>
+      <span>{{ selectedYear !== null ? selectedYear : 'All Years' }}</span>
+      <button v-if="selectedYear !== null" @click="resetYear" class="reset-btn">Reset</button>
     </div>
+    <v-chart
+      :option="chartOption"
+      autoresize
+      style="height: 200px; width: 100%; cursor: pointer;"
+      @click="handleChartClick"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, watch, onMounted, defineEmits, defineProps } from 'vue';
-import { Chart, BarController, BarElement, CategoryScale, LinearScale, Tooltip } from 'chart.js';
+import { ref, computed, watch } from 'vue';
+import VChart from 'vue-echarts';
 
-Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip);
-
-const emit = defineEmits(['update:year']);
 const props = defineProps({
-  modelValue: { type: String, default: '' }
+  procedures: {
+    type: Array,
+    default: () => [],
+  },
+  year: {
+    type: Number,
+    default: null,
+  }
+});
+const emit = defineEmits(['update:year']);
+
+const selectedYear = ref(props.year);
+
+watch(() => props.year, (newVal) => {
+  selectedYear.value = newVal;
 });
 
-const localYear = ref(props.modelValue);
-const yearChartCanvas = ref(null);
-let yearChartInstance = null;
-let yearlyTotals = {};  // cache data
-
-// Parse CSV string into yearly totals
-function parseCSVToYearlyTotals(csv) {
-  const lines = csv.trim().split('\n');
-  const headers = lines[0].split(',');
-
-  const totalIndex = headers.indexOf('Total_Procedures');
-  const yearIndex = headers.indexOf('Year');
-
+const yearTotals = computed(() => {
   const totals = {};
-
-  for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(',');
-    const year = cols[yearIndex];
-    const totalProcedures = parseInt(cols[totalIndex], 10);
-
-    if (!totals[year]) {
-      totals[year] = 0;
-    }
-    totals[year] += totalProcedures;
-  }
-
+  props.procedures.forEach((item) => {
+    const y = String(item.Year).trim();
+    if (!totals[y]) totals[y] = 0;
+    const sum = Object.entries(item).reduce((acc, [key, val]) => {
+      if (key === 'Year' || key === 'Country' || key === 'Port_City') return acc;
+      return acc + (Number(val) || 0);
+    }, 0);
+    totals[y] += sum;
+  });
   return totals;
-}
+});
 
-async function loadCSV() {
-  try {
-    const response = await fetch('/data/procedures_by_location.csv'); // Modify to your CSV path
-    if (!response.ok) {
-      throw new Error(`Failed to load CSV: ${response.status}`);
-    }
-    const csvText = await response.text();
-    yearlyTotals = parseCSVToYearlyTotals(csvText);
-    renderYearChart();
-  } catch (error) {
-    console.error('Failed to read CSV file:', error);
-  }
-}
+const years = computed(() => Object.keys(yearTotals.value).sort());
 
-const setYear = (year) => {
-  if (localYear.value === year) {
-    localYear.value = '';
-  } else {
-    localYear.value = year;
-  }
-  emit('update:year', localYear.value);
-};
+const data = computed(() => years.value.map(y => yearTotals.value[y] || 0));
 
-const clearYear = () => {
-  localYear.value = '';
-  emit('update:year', '');
-};
-
-const renderYearChart = () => {
-  if (!yearChartCanvas.value) return;
-
-  const years = Object.keys(yearlyTotals).sort();
-  const data = years.map(y => yearlyTotals[y]);
-
-  const backgroundColors = years.map(y =>
-    localYear.value === y
-      ? 'rgba(0, 123, 255, 1)'
-      : 'rgba(100, 149, 237, 0.3)'
-  );
-
-  const maxVal = Math.max(...data);
-
-  const dataObj = {
-    labels: years,
-    datasets: [{
-      label: 'Number of Treatments',
-      data,
-      backgroundColor: backgroundColors,
-      borderColor: 'rgba(54, 162, 235, 1)',
-      borderWidth: 1,
-    }],
-  };
-
-  const options = {
-    responsive: false,
-    maintainAspectRatio: false,
-    scales: {
-      y: {
-        beginAtZero: true,
-        max: maxVal * 1.1,
-        ticks: {
-          stepSize: Math.ceil(maxVal / 5),
-          display: false,
-        },
-        grid: {
-          display: false,
-          drawBorder: false,
-        },
-      },
-      x: {
-        ticks: {
-          font: { size: 10 },
-        },
-        grid: {
-          display: false,
-        },
-      },
+const chartOption = computed(() => {
+  const _ = selectedYear.value
+  return {
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' }
     },
-    plugins: {
-      legend: { display: false },
-      tooltip: { enabled: true },
+    xAxis: {
+      type: 'category',
+      data: years.value,
+      axisTick: { alignWithLabel: true },
+      axisLabel: { color: '#374151' }
     },
-    onClick(evt, elements) {
-      if (elements.length) {
-        const index = elements[0].index;
-        const clickedYear = years[index];
-        setYear(clickedYear);
+    yAxis: {
+      type: 'value',
+      name: 'Number of Treatments',
+      axisLabel: { color: '#374151' }
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '20%',
+      containLabel: true
+    },
+    series: [
+      {
+        name: 'Treatments',
+        type: 'bar',
+        data: data.value,
+        itemStyle: {
+          color: (params) => {
+            const year = Number(years.value[params.dataIndex]);
+            console.log('Bar index:', params.dataIndex, 'year:', year, 'selectedYear:', selectedYear.value);
+            return selectedYear.value === year ? '#2563eb' : '#bfdbfe';
+          }
+        },
+        emphasis: {
+          itemStyle: { color: '#1e40af' }
+        }
       }
-    },
+    ]
   };
+});
 
-  if (yearChartInstance) {
-    yearChartInstance.data.labels = years;
-    yearChartInstance.data.datasets[0].data = data;
-    yearChartInstance.data.datasets[0].backgroundColor = backgroundColors;
-    yearChartInstance.options.scales.y.max = options.scales.y.max;
-    yearChartInstance.update({ duration: 0 });
+function handleChartClick(params) {
+  if (!params || typeof params.dataIndex !== 'number') return;
+  const clickedYear = Number(years.value[params.dataIndex]);
+  if (selectedYear.value === clickedYear) {
+    selectedYear.value = null;
   } else {
-    yearChartInstance = new Chart(yearChartCanvas.value, {
-      type: 'bar',
-      data: dataObj,
-      options,
-    });
+    selectedYear.value = clickedYear;
   }
-};
+  emit('update:year', selectedYear.value);
+}
 
-watch(localYear, () => {
-  renderYearChart();
-});
+function resetYear() {
+  selectedYear.value = null;
+  emit('update:year', null);
+}
 
-watch(() => props.modelValue, (newVal) => {
-  if (newVal !== localYear.value) {
-    localYear.value = newVal;
-  }
-});
-
-onMounted(() => {
-  loadCSV();
+watch(selectedYear, (newVal) => {
+  console.log('selectedYear changed:', newVal);
 });
 </script>
 
-<style>
-#yearChart {
-  width: 1280px !important;
-  height: 100px !important;
+<style scoped>
+.filter-panel {
+  width: 100%;
+}
+
+.panel-label {
+  font-weight: 600;
+  margin-bottom: 6px;
   display: block;
+  color: #1e3a8a;
+}
+
+.selected-year-text {
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.reset-btn {
+  margin-left: 12px;
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background-color 0.3s ease;
+}
+.reset-btn:hover {
+  background-color: #b91c1c;
 }
 </style>
