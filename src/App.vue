@@ -4,7 +4,7 @@
     <section class="banner">
       <img class="banner-icon" src="/images/logo.svg" alt="Logo" />
       <h1 class="banner-title">
-        Mercy Ships Africa Charity Visualization
+        Mercy Ships Medical Missions - Visualization
         <span class="banner-subtitle">Make a difference in Africa together</span>
       </h1>
     </section>
@@ -36,7 +36,7 @@
             </a>
           </li>
         </ul>
-        <div class="copyright">© 2024 Mercy Ships Demo</div>
+        <div class="copyright">© 2025 Mercy Ships Medical Missions</div>
       </aside>
 
       <!-- Main Content -->
