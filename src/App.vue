@@ -29,6 +29,9 @@
             <button :class="{ active: currentView === 'journey' }" @click="currentView = 'journey'">Patient Journey</button>
           </li>
           <li>
+            <button :class="{ active: currentView === 'resources' }" @click="currentView = 'resources'">Resource Allocation</button>
+          </li>
+          <li>
             <button :class="{ active: currentView === 'other' }" @click="currentView = 'other'">Stories</button>
           </li>
           <li>
@@ -67,6 +70,10 @@
             <PatientJourneySankey />
           </template>
 
+          <template v-else-if="currentView === 'resources'">
+            <ResourceAllocationDashboard />
+          </template>
+
           <template v-else>
             <AnnualStories />
           </template>
@@ -94,6 +101,7 @@ import ProcedureTrendChart from '@/components/ProcedureTrendChart.vue';
 import ErrorBoundary from '@/components/ErrorBoundary.vue';
 import AnnualStories from '@/components/AnnualStories.vue';
 import PatientJourneySankey from '@/components/PatientJourneySankey.vue';
+import ResourceAllocationDashboard from '@/components/ResourceAllocationDashboard.vue';
 
 
 const impactMetrics = ref([]);
