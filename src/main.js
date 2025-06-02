@@ -1,5 +1,5 @@
 import * as echarts from 'echarts/core';
-import { BarChart, SankeyChart, HeatmapChart } from 'echarts/charts';
+import { BarChart, SankeyChart, HeatmapChart, ScatterChart } from 'echarts/charts';
 import {
     TooltipComponent,
     LegendComponent,
@@ -15,6 +15,7 @@ echarts.use([
     BarChart,
     SankeyChart,
     HeatmapChart,
+    ScatterChart,
     TooltipComponent,
     LegendComponent,
     GridComponent,
