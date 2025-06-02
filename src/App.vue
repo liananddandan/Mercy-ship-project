@@ -32,7 +32,13 @@
             <button :class="{ active: currentView === 'resources' }" @click="currentView = 'resources'">Resource Allocation</button>
           </li>
           <li>
-            <button :class="{ active: currentView === 'other' }" @click="currentView = 'other'">Stories</button>
+            <button :class="{ active: currentView === 'impact' }" @click="currentView = 'impact'">Impact Analysis</button>
+          </li>
+          <li>
+            <button :class="{ active: currentView === 'geographic' }" @click="currentView = 'geographic'">Geographic Impact Network</button>
+          </li>
+          <li>
+            <button :class="{ active: currentView === 'cost-benefit' }" @click="currentView = 'cost-benefit'">Cost-Benefit Analysis</button>
           </li>
           <li>
             <!-- 这里用a标签替代button，添加target="_blank"新窗口打开 -->
@@ -74,6 +80,18 @@
             <ResourceAllocationDashboard />
           </template>
 
+          <template v-else-if="currentView === 'impact'">
+            <ImpactAnalysisMatrix />
+          </template>
+
+          <template v-else-if="currentView === 'geographic'">
+            <GeographicImpactNetwork />
+          </template>
+
+          <template v-else-if="currentView === 'cost-benefit'">
+            <CostBenefitMatrix />
+          </template>
+
           <template v-else>
             <AnnualStories />
           </template>
@@ -102,13 +120,16 @@ import ErrorBoundary from '@/components/ErrorBoundary.vue';
 import AnnualStories from '@/components/AnnualStories.vue';
 import PatientJourneySankey from '@/components/PatientJourneySankey.vue';
 import ResourceAllocationDashboard from '@/components/ResourceAllocationDashboard.vue';
+import ImpactAnalysisMatrix from '@/components/ImpactAnalysisMatrix.vue';
+import GeographicImpactNetwork from '@/components/GeographicImpactNetwork.vue';
+import CostBenefitMatrix from '@/components/CostBenefitMatrix.vue';
 
 
 const impactMetrics = ref([]);
 const patientDemographics = ref([]);
 const procedures = ref([]);
 
-const selectedYear = ref(null);
+const selectedYear = ref(2023);
 const selectedPort = ref('');
 const selectedProcedure = ref('');
 
