@@ -1,0 +1,16 @@
+From_Port_ID,To_Port_ID,Supply_Volume,Year,Supply_Type
+P001,P002,500,2023,Medical Equipment
+P002,P003,450,2023,Medications
+P003,P004,600,2023,Surgical Supplies
+P004,P005,550,2023,Medical Equipment
+P005,P006,480,2023,Medications
+P006,P007,520,2023,Surgical Supplies
+P007,P008,470,2023,Medical Equipment
+P008,P009,510,2023,Medications
+P009,P010,430,2023,Surgical Supplies
+P010,P001,490,2023,Medical Equipment
+P001,P003,540,2022,Medical Equipment
+P002,P004,460,2022,Medications
+P003,P005,580,2022,Surgical Supplies
+P004,P006,530,2022,Medical Equipment
+P005,P007,440,2022,Medications 

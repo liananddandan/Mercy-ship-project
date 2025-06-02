@@ -1,6 +1,6 @@
 <template>
   <div class="impact-analysis-matrix">
-    <h2 class="matrix-title">Impact Analysis Matrix</h2>
+    <h2 class="matrix-title">Impact Analysis Matrix - Scatter Plots</h2>
     
     <div class="matrix-description">
       <p>Multi-dimensional analysis of Mercy Ships' impact across different metrics:</p>

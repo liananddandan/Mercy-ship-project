@@ -34,8 +34,8 @@ const props = defineProps({
     default: () => [],
   },
   selectedYear: {
-    type: Number,
-    required: true,
+    type: [Number, null],
+    required: false,
     default: null,
   }
 });

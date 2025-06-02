@@ -1,6 +1,6 @@
 <template>
   <div class="cost-benefit-matrix">
-    <h2 class="matrix-title">Cost-Benefit Analysis Matrix</h2>
+    <h2 class="matrix-title">Cost-Benefit Analysis Matrix - Bubble Chart (Scatter Plot)</h2>
     
     <div class="matrix-description">
       <p>Analysis of procedure costs, outcomes, and volumes to identify cost-effective interventions:</p>
