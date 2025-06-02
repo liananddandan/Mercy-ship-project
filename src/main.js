@@ -1,5 +1,5 @@
 import * as echarts from 'echarts/core';
-import { BarChart } from 'echarts/charts';
+import { BarChart, SankeyChart } from 'echarts/charts';
 import {
     TooltipComponent,
     LegendComponent,
@@ -12,6 +12,7 @@ import VueECharts from 'vue-echarts';
 
 echarts.use([
     BarChart,
+    SankeyChart,
     TooltipComponent,
     LegendComponent,
     GridComponent,

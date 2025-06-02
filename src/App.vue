@@ -26,6 +26,9 @@
               @click="currentView = 'demographics'">Demographics</button>
           </li>
           <li>
+            <button :class="{ active: currentView === 'journey' }" @click="currentView = 'journey'">Patient Journey</button>
+          </li>
+          <li>
             <button :class="{ active: currentView === 'other' }" @click="currentView = 'other'">Stories</button>
           </li>
           <li>
@@ -60,6 +63,10 @@
             <DemographicChart :demographics="filteredDemographics" />
           </template>
 
+          <template v-else-if="currentView === 'journey'">
+            <PatientJourneySankey />
+          </template>
+
           <template v-else>
             <AnnualStories />
           </template>
@@ -86,6 +93,7 @@ import DemographicChart from '@/components/DemographicChart.vue';
 import ProcedureTrendChart from '@/components/ProcedureTrendChart.vue';
 import ErrorBoundary from '@/components/ErrorBoundary.vue';
 import AnnualStories from '@/components/AnnualStories.vue';
+import PatientJourneySankey from '@/components/PatientJourneySankey.vue';
 
 
 const impactMetrics = ref([]);
