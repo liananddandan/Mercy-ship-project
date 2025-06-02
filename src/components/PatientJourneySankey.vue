@@ -1,6 +1,6 @@
 <template>
   <div class="patient-journey-sankey">
-    <h2 class="chart-title">Patient Journey Timeline</h2>
+    <h2 class="chart-title">Patient Journey Timeline - Sankey Diagram</h2>
     <div class="chart-description">
       <p>Visualizing the flow of patients through different stages of care:</p>
       <ul>

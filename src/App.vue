@@ -15,6 +15,9 @@
         <h3>Menu</h3>
         <ul>
           <li>
+            <button :class="{ active: currentView === 'mercy-ships' }" @click="currentView = 'mercy-ships'">Mercy Ships</button>
+          </li>
+          <li>
             <button :class="{ active: currentView === 'map' }" @click="currentView = 'map'">Map</button>
           </li>
           <li>
@@ -54,7 +57,13 @@
       <!-- Main Content -->
       <main class="main-content">
         <ErrorBoundary @error="handleComponentError">
-          <template v-if="currentView === 'map'">
+          <template v-if="currentView === 'mercy-ships'">
+            <div class="mercy-ships-intro">
+              <img src="/images/mercy-shipsintro1920x690.webp" alt="Mercy Ships Introduction" class="intro-image" />
+            </div>
+          </template>
+
+          <template v-else-if="currentView === 'map'">
             <div class="map-container">
               <MapView :metrics="filteredMetrics" :selectedYear="selectedYear" />
             </div>
@@ -449,6 +458,22 @@ loadData();
   color: #4b5563;
   font-size: 1.2rem;
   line-height: 1.6;
+}
+
+.mercy-ships-intro {
+  background: white;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  margin: 2rem 0;
+  text-align: center;
+}
+
+.intro-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 </style>
