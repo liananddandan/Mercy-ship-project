@@ -35,9 +35,6 @@
             <button :class="{ active: currentView === 'impact' }" @click="currentView = 'impact'">Impact Analysis</button>
           </li>
           <li>
-            <button :class="{ active: currentView === 'geographic' }" @click="currentView = 'geographic'">Geographic Impact Network</button>
-          </li>
-          <li>
             <button :class="{ active: currentView === 'cost-benefit' }" @click="currentView = 'cost-benefit'">Cost-Benefit Analysis</button>
           </li>
           <li>
@@ -87,10 +84,6 @@
             <ImpactAnalysisMatrix />
           </template>
 
-          <template v-else-if="currentView === 'geographic'">
-            <GeographicImpactNetwork />
-          </template>
-
           <template v-else-if="currentView === 'cost-benefit'">
             <CostBenefitMatrix />
           </template>
@@ -131,7 +124,6 @@ import AnnualStories from '@/components/AnnualStories.vue';
 import PatientJourneySankey from '@/components/PatientJourneySankey.vue';
 import ResourceAllocationDashboard from '@/components/ResourceAllocationDashboard.vue';
 import ImpactAnalysisMatrix from '@/components/ImpactAnalysisMatrix.vue';
-import GeographicImpactNetwork from '@/components/GeographicImpactNetwork.vue';
 import CostBenefitMatrix from '@/components/CostBenefitMatrix.vue';
 
 
