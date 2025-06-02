@@ -41,6 +41,9 @@
             <button :class="{ active: currentView === 'cost-benefit' }" @click="currentView = 'cost-benefit'">Cost-Benefit Analysis</button>
           </li>
           <li>
+            <button :class="{ active: currentView === 'stories' }" @click="currentView = 'stories'">Patient Stories</button>
+          </li>
+          <li>
             <!-- 这里用a标签替代button，添加target="_blank"新窗口打开 -->
             <a href="https://mercyships.org.nz/get-involved/become-a-volunteer/" target="_blank"
               rel="noopener noreferrer" class="external-link">
@@ -92,8 +95,15 @@
             <CostBenefitMatrix />
           </template>
 
-          <template v-else>
+          <template v-else-if="currentView === 'stories'">
             <AnnualStories />
+          </template>
+
+          <template v-else>
+            <div class="welcome-message">
+              <h2>Welcome to Mercy Ships Medical Missions Visualization</h2>
+              <p>Please select a view from the menu to begin exploring our data.</p>
+            </div>
           </template>
         </ErrorBoundary>
       </main>
@@ -425,6 +435,28 @@ loadData();
 .external-link:hover {
   background-color: #e0e7ff;
   color: #2563eb;
+}
+
+.welcome-message {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  margin: 2rem auto;
+  max-width: 800px;
+}
+
+.welcome-message h2 {
+  color: #1e3a8a;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.welcome-message p {
+  color: #4b5563;
+  font-size: 1.2rem;
+  line-height: 1.6;
 }
 
 </style>
