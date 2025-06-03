@@ -1,28 +1,30 @@
 import * as echarts from 'echarts/core';
-import { BarChart, SankeyChart, HeatmapChart, ScatterChart } from 'echarts/charts';
+import { BarChart, SankeyChart, HeatmapChart, ScatterChart, GraphChart } from 'echarts/charts';
 import {
     TooltipComponent,
     LegendComponent,
     GridComponent,
-    TimelineComponent,  // 新增
-    TitleComponent,    // 新增
+    TimelineComponent,
+    TitleComponent,
     VisualMapComponent
 } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import VueECharts from 'vue-echarts';
 
+// Register ECharts components
 echarts.use([
     BarChart,
     SankeyChart,
     HeatmapChart,
     ScatterChart,
+    GraphChart,
     TooltipComponent,
     LegendComponent,
     GridComponent,
     TimelineComponent,
     TitleComponent,
     VisualMapComponent,
-    CanvasRenderer,
+    CanvasRenderer
 ]);
 
 import { createApp } from 'vue';

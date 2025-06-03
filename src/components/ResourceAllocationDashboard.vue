@@ -1,6 +1,6 @@
 <template>
   <div class="resource-allocation-dashboard">
-    <h2 class="dashboard-title">Resource Allocation Dashboard</h2>
+    <h2 class="dashboard-title">Resource Allocation Dashboard - Heat Map</h2>
     
     <div class="dashboard-description">
       <p>Monitor and optimize resource utilization across different specialties and departments:</p>

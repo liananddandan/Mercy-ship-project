@@ -16,6 +16,11 @@ export default defineConfig({
   server: {
     port: 5173,
     open: true, // Auto-open browser to catch rendering issues
-    hmr: false
+    hmr: true
   },
+  publicDir: 'public',
+  build: {
+    assetsDir: 'assets',
+    sourcemap: true
+  }
 });

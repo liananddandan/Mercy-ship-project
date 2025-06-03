@@ -1,0 +1,16 @@
+From_Port_ID,To_Port_ID,Patient_Count,Year,Procedure_Type
+P001,P004,150,2023,Surgery
+P002,P001,200,2023,Pre-operative
+P003,P002,180,2023,Post-operative
+P004,P005,120,2023,Follow-up
+P005,P006,160,2023,Surgery
+P006,P007,90,2023,Pre-operative
+P007,P008,110,2023,Post-operative
+P008,P009,130,2023,Follow-up
+P009,P010,70,2023,Surgery
+P010,P003,80,2023,Pre-operative
+P001,P006,140,2022,Surgery
+P002,P007,170,2022,Pre-operative
+P003,P008,190,2022,Post-operative
+P004,P009,100,2022,Follow-up
+P005,P010,150,2022,Surgery 

@@ -1,0 +1,11 @@
+Port_ID,Port_Name,Port_Type,Total_Operations,Country,Region
+P001,Dakar,Major Port,2500,Senegal,West Africa
+P002,Conakry,Major Port,2200,Guinea,West Africa
+P003,Lomé,Major Port,1800,Togo,West Africa
+P004,Cotonou,Regional Center,1500,Benin,West Africa
+P005,Douala,Regional Center,2000,Cameroon,Central Africa
+P006,Freetown,Regional Center,1900,Sierra Leone,West Africa
+P007,Monrovia,Support Facility,1200,Liberia,West Africa
+P008,Pointe-Noire,Support Facility,1400,Congo,Central Africa
+P009,Toamasina,Major Port,2100,Madagascar,East Africa
+P010,Banjul,Support Facility,900,The Gambia,West Africa 
